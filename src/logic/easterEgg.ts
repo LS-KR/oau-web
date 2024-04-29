@@ -48,6 +48,30 @@ export function handleFlowerToast(name: string) {
     }
 }
 
+export function handleElihusoSuicideNote(): boolean {
+    if (localStorage.getItem('lang') === 'en') return false;
+    if (!localStorage.getItem('easterEggMode')) return false;
+    if (parseInt(localStorage.getItem('easterEggMode')) == 0) return false;
+    if (!localStorage.getItem('Betelgeuse')) return false;
+    if (localStorage.getItem('Antares')) return false;
+    scheduledTask(20000, () => {
+        if ((window.location.pathname == '/profile/Elihuso') || (window.location.pathname == '/profile/Elihuso/')) {
+            toast('心宿二', 'This is a story, the story about endings, death, nirvana', 'antares.jpg', 'url(/img/universe.jpg)', 64, 64, '#f0f8ff')
+            localStorage.setItem('Antares', 'Nirvana')
+        }
+    })
+    return true;
+}
+
+export function handleAntares(): boolean {
+    if (localStorage.getItem('lang') === 'en') return false;
+    if (!localStorage.getItem('easterEggMode')) return false;
+    if (parseInt(localStorage.getItem('easterEggMode')) == 0) return false;
+    if (!localStorage.getItem('Betelgeuse')) return false;
+    if (!localStorage.getItem('Antares')) return false;
+    return true;
+}
+
 export function handleEasterEgg(userid: string) {
     const swal2 = document.getElementsByTagName('div')
     for (const v of swal2) {

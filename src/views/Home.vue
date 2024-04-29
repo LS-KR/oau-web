@@ -59,6 +59,7 @@ import { fetchWithLang, handleIconFromString } from "@/logic/helper";
 import { fitText } from "@/logic/dom_utils";
 import TdorComments from "@/views/TdorComments.vue";
 import router from "@/router";
+import { handleElihusoSuicideNote } from '@/logic/easterEgg';
 
 @Component({components: {TdorComments}})
 export default class Home extends Vue
@@ -98,6 +99,9 @@ export default class Home extends Vue
         {
             const width = this.bookmark[0].offsetWidth - 10
             for (const b of this.bookmarkTexts) fitText(b, { width })
+        }
+        if (handleElihusoSuicideNote()) {
+            router.push('/profile/Elihuso')
         }
     }
 
