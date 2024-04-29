@@ -69,6 +69,8 @@ export function handleAntares(): boolean {
     if (parseInt(localStorage.getItem('easterEggMode')) == 0) return false;
     if (!localStorage.getItem('Betelgeuse')) return false;
     if (!localStorage.getItem('Antares')) return false;
+    if (localStorage.getItem('AntaresShow')) return false;
+    localStorage.setItem('AntaresShow', 'Stories')
     return true;
 }
 
