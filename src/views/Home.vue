@@ -14,6 +14,8 @@
 
         <RandomPerson />
 
+        <Loading v-if="isLoading" />
+
         <div id="profiles" class="unselectable" v-if="people">
             <div class="profile" v-for="(p, i) in people" :key="i">
                 <div class="back"/>
@@ -21,7 +23,8 @@
                     <transition name="fade" @after-leave="() => switchPage(p)">
                         <img :src="profileUrl(p)" draggable="false" alt="profile" class="front clickable"
                              @click.exact="() => { if (!clicked) { clicked = p.name; } return false }"
-                             v-if="clicked !== p.name">
+                             v-if="clicked !== p.name"
+                             v-on:load="isLoading = false">
                     </transition>
                 </a>
                 <div class="name font-custom" ref="bookmarkTexts">{{p.name}}</div>
@@ -58,14 +61,16 @@ import { info } from '@/logic/utils';
 import { fetchWithLang, handleIconFromString } from "@/logic/helper";
 import { fitText } from "@/logic/dom_utils";
 import TdorComments from "@/views/TdorComments.vue";
+import Loading from '@/components/Loading.vue';
 import router from "@/router";
 import { handleElihusoSuicideNote } from '@/logic/easterEgg';
 
-@Component({components: {TdorComments}})
+@Component({components: {TdorComments, Loading}})
 export default class Home extends Vue
 {
     clicked = ''
     showAdd = false
+    isLoading = true
 
     lang = getLang()
     tdorTop = handleIconFromString(this.lang === 'zh_hans' ? tdorTop : (this.lang === 'zh_hant' ? tdorTopHant : tdorTopEn));
