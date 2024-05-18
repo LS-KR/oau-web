@@ -15,12 +15,13 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { parsePeopleJson, Person } from "@/logic/data";
 import { fetchWithLang, scheduledTask, trim } from "@/logic/helper";
 import { handleEasterEgg } from '@/logic/easterEgg'
-import { Lang, dataHost, peopleUrl, replaceUrlVars, setLang, t } from "@/logic/config";
+import { Lang, dataHost, fi, peopleUrl, replaceUrlVars, setLang, t } from "@/logic/config";
 import MDX from "@/components/MDX.vue";
 import urljoin from "url-join";
 import ProfileComments from "@/views/ProfileComments.vue";
 import ProfileCard from '@/components/ProfileCard.vue';
 import Swal from 'sweetalert2';
+import moment from 'moment';
 
 @Component({components: {ProfileCard, ProfileComments, MDX}})
 export default class Profile extends Vue
@@ -53,7 +54,20 @@ export default class Profile extends Vue
             .then(it => {
                 this.p = parsePeopleJson(it)
                 if (this.pid == 'tdor') this.p.id = 'tdor'
+
+                for (const v of this.p!.info) {
+                    if (v[0] == fi.born) {
+                        const birthStr = v[1];
+                        const birth = moment(birthStr, "YYYY-MM-DD").toDate();
+                        const now = new Date();
+                        if ((birth.getMonth() == now.getMonth()) && (birth.getDate() == now.getDate())) {
+                            console.log('today is the birthday of ' + this.p!.name)
+                            //TODO: Balloons
+                        }
+                    }
+                }
             })
+
 
         if (this.pid == 'tdor') return
 

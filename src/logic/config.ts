@@ -259,3 +259,5 @@ export const info_i18n = {
         "age": "年齡",
     }
 }
+
+export const fi = info_i18n[getLang()]
