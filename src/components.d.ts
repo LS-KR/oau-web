@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BackupButtons: typeof import('./components/BackupButtons.vue')['default']
+    BirthdayButton: typeof import('./components/BirthdayButton.vue')['default']
     ChannelBackupButton: typeof import('./components/ChannelBackupButton.vue')['default']
     Divider: typeof import('./components/divider.vue')['default']
     DynamicIcon: typeof import('./components/DynamicIcon.vue')['default']
@@ -37,5 +38,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SubmitPrompt: typeof import('./components/SubmitPrompt.vue')['default']
+    SwitchButton: typeof import('./components/SwitchButton.vue')['default']
   }
 }

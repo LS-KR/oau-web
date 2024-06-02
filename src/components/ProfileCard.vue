@@ -10,6 +10,7 @@
                         <div class="button anim fbox-vcenter" @click="flower"
                             :class="(flowersGiven || loading.has('flower')) ? 'disabled' : ''">
                             <IEpCheck v-if="flowersGiven" />
+                            <Icon class="iconR" icon="line-md:cake" v-else-if="isBirthday && !loading.has('flower')" />
                             <IEpLollipop v-else-if="!loading.has('flower')" />
                             <IEpLoading v-else />
                         </div>
@@ -46,21 +47,27 @@
             </div>
         </div>
 
+        <a class="switchButton" v-if="canSwitch" v-bind:href="target" draggable="false">
+            <SwitchButton />
+        </a>
+
         <img class="watermark" draggable="false" src="/favicon-large.png" alt="" />
     </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { backendHost, replaceUrlVars, t } from "@/logic/config";
+import { backendHost, dataHost, replaceUrlVars, t } from "@/logic/config";
 import { abbreviateNumber, getTodayDate } from "@/logic/helper";
 import { Person } from "@/logic/data";
 import { info } from '@/logic/utils';
+import { Icon } from '@iconify/vue';
 import Swal from 'sweetalert2';
 import router from "@/router";
-import { handleFlowerToast } from '@/logic/easterEgg';
+import { handleFlowerToast, handleBirthdayToast } from '@/logic/easterEgg';
+import urljoin from 'url-join';
 
-@Component({ components: {} })
+@Component({ components: { Icon } })
 export default class ProfileCard extends Vue {
     @Prop({ required: true }) userid!: string
     @Prop({ required: true }) p!: Person
@@ -68,6 +75,9 @@ export default class ProfileCard extends Vue {
 
     flowers = 0
     flowersGiven = false
+    isBirthday = false
+    canSwitch = false
+    target = '.'
 
     loading = new Set<string>()
 
@@ -76,12 +86,39 @@ export default class ProfileCard extends Vue {
     created() {
         this.flowersGiven = localStorage.getItem(`last_flower_given@${this.userid}`) === getTodayDate()
 
+        fetch(urljoin(dataHost, 'birthday-list.json'))
+            .then(it => it.json())
+            .then(it => {
+                it = (it as [string, string][])
+                for (const v of it) {
+                    if (v[0] == this.userid) {
+                        const d = new Date(v[1]);
+                        const now = new Date();
+                        if ((now.getDate() == d.getDate()) && (now.getMonth() == d.getMonth())) {
+                            this.isBirthday = true
+                        }
+                    }
+                }
+            })
+
         // TODO: Handle errors
         fetch(backendHost + `/flowers/get?id=${this.userid}`)
             .then(it => it.text())
             .then(it => {
                 info(`Flowers: ${it}`)
                 this.flowers = parseInt(it)
+            })
+
+        fetch(urljoin(dataHost, 'switch-pair.json'))
+            .then(it => it.json())
+            .then(it => {
+                const pairs = it as [string, string][]
+                for (const v of pairs) {
+                    if (v[0] == this.userid) {
+                        this.canSwitch = true
+                        this.target = `/profile/${v[1]}`
+                    }
+                }
             })
     }
 
@@ -102,6 +139,7 @@ export default class ProfileCard extends Vue {
             .finally(() => this.loading.delete('flower'))
 
         handleFlowerToast(this.p.name)
+        if (this.isBirthday) handleBirthdayToast(this.p.name)
     }
 
     get flowerText(): string {
@@ -132,6 +170,7 @@ export default class ProfileCard extends Vue {
 
 <style lang="sass" scoped>
 @import "../css/colors"
+@import "@/css/global"
 
 // Screenshot mode
 .screenshot #info
@@ -151,6 +190,17 @@ export default class ProfileCard extends Vue {
 
     img.watermark
         height: 250px
+
+.switchButton
+    position: absolute
+    width: 24px
+    height: 24px
+    bottom: 20px
+    right: 20px
+
+.switchButton:hover
+    transform: translate(-1px -1px)
+    filter: drop-shadow(2px 2px 0.75px rgba(166, 134, 89, 0.32))
 
 #info
     width: 100%
