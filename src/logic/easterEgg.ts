@@ -1,10 +1,16 @@
 import Swal from "sweetalert2"
-import { toast, scheduledTask } from "./helper"
-import { t } from "./config"
+import {t} from "./config"
+import {scheduledTask, toast} from "./helper"
 
 const registedEggItem = [
     'hasFlowered', 'isSeenMeowBot233', 'BetelgeuseShown', 'ChongQingShown', 'Sea', 'detailsByYumao', 'funeralFlowers', 'preferredName', 'rhythmShown'
 ]
+
+export function isEaster(): boolean {
+    if (!localStorage.getItem('easterEggMode')) return false;
+    if (parseInt(localStorage.getItem('easterEggMode')) == 0) return false;
+    return true;
+}
 
 function allShown(): boolean {
     for (const v of registedEggItem) {
@@ -30,8 +36,7 @@ function achieveAll() {
                 showCloseButton: false,
                 showDenyButton: false
             })
-        }
-        else {
+        } else {
             if (localStorage.getItem('allShown'))
                 localStorage.removeItem('allShown')
         }
@@ -90,8 +95,7 @@ export function handleEasterEgg(userid: string) {
     if ((now.getDate() == 1) && (now.getMonth() == 3) && (parseInt(localStorage.getItem('easterEggMode')) == 0) && (!localStorage.getItem('manualModify'))) {
         localStorage.setItem("easterEggMode", "1")
         localStorage.setItem("enabledByApril", "1")
-    }
-    else {
+    } else {
         if (localStorage.getItem("enabledByApril") && (!localStorage.getItem('manualModify'))) {
             localStorage.setItem("easterEggMode", "0")
         }
@@ -212,8 +216,8 @@ export function handleEasterEgg(userid: string) {
             }
         })
     }
-    if ((userid == "SevenBird") || (userid == "Considerate_cat") || (userid == "ttttsuuukikoo_")) {
-        const rhythmKeyword = ["音游", "音遊", "Arc", "舞萌"]
+    if ((userid == "SevenBird") || (userid == "Considerate_cat") || (userid == "ttttsuuukikoo_") || (userid == "hakureico") || (userid == "xixi_yuexi") || (userid == "Jennife80677612")) {
+        const rhythmKeyword = ["音游", "音遊", "Arc", "舞萌", "maimaiDX", "OSU", "ptt", "Project Sekai"]
         const ps = document.getElementsByTagName("p")
         for (const v of ps) {
             for (const i of rhythmKeyword) {
@@ -226,7 +230,7 @@ export function handleEasterEgg(userid: string) {
                             rhythm.push(userid)
                             localStorage.setItem("rhythm", JSON.stringify(rhythm))
                         }
-                        if (rhythm.includes("SevenBird") && rhythm.includes("Considerate_cat") && rhythm.includes("ttttsuuukikoo_") && (!localStorage.getItem("rhythmShown"))) {
+                        if (rhythm.includes("SevenBird") && rhythm.includes("Considerate_cat") && rhythm.includes("ttttsuuukikoo_") && rhythm.includes("hakureico") && rhythm.includes("xixi_yuexi") && rhythm.includes("Jennife80677612") && (!localStorage.getItem("rhythmShown"))) {
                             localStorage.setItem("rhythmShown", "AP end")
                             toast("希望有个 All Perfect 的结局", " ~ All that I'm left with is your reminiscences ~ ", "musical-score.png", null, 64, 64, null)
                         }

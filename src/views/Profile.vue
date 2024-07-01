@@ -1,9 +1,11 @@
 <template>
     <div>
         <div class="profile-page" :class="{screenshot: screenshotMode}" v-if="p">
-            <ProfileCard class="profile-card" :userid="pid" :p="p" v-if="pid != 'tdor'" :screenshot-mode="screenshotMode" />
+            <ProfileCard class="profile-card" :userid="pid" :p="p" v-if="pid != 'tdor'"
+                         :screenshot-mode="screenshotMode"/>
 
             <MDX class="content" :code="compiledMdxCode" v-if="pid != 'tdor'"/>
+            <Balloon v-for="(n, i) in isBirthday" :key="i"/>
 
             <ProfileComments class="comments" :p="p" v-if="p.comments && !screenshotMode"/>
         </div>
@@ -11,32 +13,34 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { parsePeopleJson, Person } from "@/logic/data";
-import { fetchWithLang, scheduledTask, trim } from "@/logic/helper";
-import { handleEasterEgg } from '@/logic/easterEgg'
-import { Lang, dataHost, peopleUrl, replaceUrlVars, setLang, t, limit } from "@/logic/config";
+import Balloon from '@/components/Balloon.vue';
 import MDX from "@/components/MDX.vue";
-import urljoin from "url-join";
-import ProfileComments from "@/views/ProfileComments.vue";
 import ProfileCard from '@/components/ProfileCard.vue';
+import {balloons, dataHost, Lang, limit, peopleUrl, replaceUrlVars, setLang, t} from "@/logic/config";
+import {parsePeopleJson, Person} from "@/logic/data";
+import {handleEasterEgg} from '@/logic/easterEgg'
+import {fetchWithLang, randint, scheduledTask, trim} from "@/logic/helper";
+import ProfileComments from "@/views/ProfileComments.vue";
 import Swal from 'sweetalert2';
+import urljoin from "url-join";
+import {Component, Prop, Vue} from 'vue-facing-decorator';
 
-@Component({components: {ProfileCard, ProfileComments, MDX}})
-export default class Profile extends Vue
-{
-    @Prop({required: true}) userid!: string
-    @Prop({default: false}) screenshotMode!: boolean
-    @Prop({default: ''}) lang!: Lang
+@Component({ components: { ProfileCard, ProfileComments, MDX, Balloon } })
+export default class Profile extends Vue {
+    @Prop({ required: true }) userid!: string
+    @Prop({ default: false }) screenshotMode!: boolean
+    @Prop({ default: '' }) lang!: Lang
 
     // Blame kuniklo
-    get pid(): string { return this.userid == 'tdov' ? 'tdor' : this.userid }
+    get pid(): string {
+        return this.userid == 'tdov' ? 'tdor' : this.userid
+    }
 
     p?: Person = null
     compiledMdxCode = ''
+    isBirthday = [] as number[]
 
-    created(): void
-    {
+    created(): void {
         const pu = peopleUrl(this.pid)
 
         localStorage.setItem('showBtn', '1')
@@ -53,6 +57,23 @@ export default class Profile extends Vue
             .then(it => {
                 this.p = parsePeopleJson(it)
                 if (this.pid == 'tdor') this.p.id = 'tdor'
+            })
+
+        fetch(urljoin(dataHost, 'birthday-list.json'))
+            .then(it => it.json())
+            .then(it => {
+                it = (it as [string, string][])
+                for (const v of it) {
+                    if (v[0] == this.userid) {
+                        const d = new Date(v[1]);
+                        const now = new Date();
+                        if ((now.getDate() == d.getDate()) && (now.getMonth() == d.getMonth())) {
+                            for (let i = 0; i < balloons.count; ++i) {
+                                this.isBirthday.push(randint(0, 2147483648))
+                            }
+                        }
+                    }
+                }
             })
 
         if (this.pid == 'tdor') return
@@ -112,8 +133,16 @@ export default class Profile extends Vue
                 text: t.view_limit.error,
                 icon: 'error',
                 showConfirmButton: false,
-                allowOutsideClick() { return false },
-                customClass: 'view-limit-alert'
+                allowOutsideClick() {
+                    return false
+                },
+                customClass: 'view-limit-alert',
+                allowEscapeKey() {
+                    return false;
+                },
+                allowEnterKey() {
+                    return false;
+                }
             })
 
             // Easter egg: Watch when the user removes the DOM element in devtools
@@ -144,13 +173,15 @@ export default class Profile extends Vue
     }
 
     updated(): void {
-        scheduledTask(250, () => {handleEasterEgg(this.userid)})
+        scheduledTask(250, () => {
+            handleEasterEgg(this.userid)
+        })
         scheduledTask(1000, () => {
-            fetchWithLang(urljoin(dataHost, 'trigger-list.json'))
+            fetch(urljoin(dataHost, 'trigger-list.json'))
                 .then(it => it.json())
                 .then(it => {
                     if (it.includes(trim(window.location.pathname.replace('/profile', ''), '/'))) {
-                        if (!localStorage.getItem('view_limit_entries')) 
+                        if (!localStorage.getItem('view_limit_entries'))
                             localStorage.setItem('view_limit_entries', '[]');
                         const view_limit_entries = JSON.parse(localStorage.getItem('view_limit_entries')) as string[]
                         if (view_limit_entries.length < 20) {

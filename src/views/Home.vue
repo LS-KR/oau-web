@@ -1,76 +1,78 @@
 <template>
     <div>
-    <div id="home" :class="clicked ? 'clicked' : ''">
+        <div id="home" :class="clicked ? 'clicked' : ''">
 
-        <!-- If needed, delete 3 lines below. -->
+            <!-- If needed, delete 3 lines below. -->
 
-        <div class="introduction markdown-content" v-html="tdorCommentView" v-if="isShowCommentsEntry()"/>
+            <div class="introduction markdown-content" v-html="tdorCommentView" v-if="isShowCommentsEntry()"/>
 
-        <div class="introduction markdown-content" v-html="tdorTop" v-if="!isDeadlinePassed()"/>
+            <div class="introduction markdown-content" v-html="tdorTop" v-if="!isDeadlinePassed()"/>
 
-        <TdorComments  v-if="!isDeadlinePassed()" />
+            <TdorComments v-if="!isDeadlinePassed()"/>
 
-        <div class="introduction markdown-content" v-html="htmlTop" />
+            <div class="introduction markdown-content" v-html="htmlTop"/>
 
-        <RandomPerson class="randomP"/>
-        <BirthdayButton class="randomP" />
-
-        <Loading v-if="isLoading" />
-
-        <div id="profiles" class="unselectable" v-if="people">
-            <div class="profile" v-for="(p, i) in people" :key="i">
-                <div class="back"/>
-                <a :href="`/profile/${p.id}`" @click.exact.prevent.stop="() => false">
-                    <transition name="fade" @after-leave="() => switchPage(p)">
-                        <img :src="profileUrl(p)" draggable="false" alt="profile" class="front clickable"
-                             @click.exact="() => { if (!clicked) { clicked = p.name; } return false }"
-                             v-if="clicked !== p.name"
-                             v-on:load="isLoading = false">
-                    </transition>
-                </a>
-                <div class="name font-custom" ref="bookmarkTexts">{{p.name}}</div>
-                <div class="bookmark" ref="bookmark"/>
+            <div class=randomButtons>
+                <RandomPerson class="randomP"/>
+                <BirthdayButton class="randomP" v-for="i of birthdayList" :key="i[0]" :id="i[0]" :name="i[1]"/>
             </div>
-            <div class="profile" v-if="showAdd">
-                <div class="back add fbox-vcenter">+</div>
+            <Loading v-if="isLoading"/>
+
+            <div id="profiles" class="unselectable" v-if="people">
+                <div class="profile" v-for="(p, i) in people" :key="i">
+                    <div class="back"/>
+                    <a :href="`/profile/${p.id}`" @click.exact.prevent.stop="() => false">
+                        <transition name="fade" @after-leave="() => switchPage(p)">
+                            <img :src="profileUrl(p)" draggable="false" alt="profile" class="front clickable"
+                                 @click.exact="() => { if (!clicked) { clicked = p.name; } return false }"
+                                 v-if="clicked !== p.name"
+                                 v-on:load="isLoading = false">
+                        </transition>
+                    </a>
+                    <div class="name font-custom" ref="bookmarkTexts">{{ p.name }}</div>
+                    <div class="bookmark" ref="bookmark"/>
+                </div>
+                <div class="profile" v-if="showAdd">
+                    <div class="back add fbox-vcenter">+</div>
+                </div>
             </div>
+
+            <div class="introduction markdown-content" v-html="htmlBottom"/>
         </div>
-
-        <div class="introduction markdown-content" v-html="htmlBottom" />
-    </div>
     </div>
 </template>
 
 <script lang="ts">
-import { Component, Ref, Vue } from 'vue-facing-decorator';
-import tdorTop from "@/assets/tdor-top.md";
-import tdorTopHant from "@/assets/tdor-top.zh_hant.md";
-import tdorTopEn from "@/assets/tdor-top.en.md";
-import tdorCommentView from "@/assets/tdor-comments-head.md";
-import tdorCommentViewEn from "@/assets/tdor-comments-head-en.md";
-import tdorCommentViewHant from "@/assets/tdor-comments-head-zh_hant.md";
-import htmlTop from "@/assets/home-top.md";
-import htmlTopHant from "@/assets/home-top.zh_hant.md";
-import htmlTopEn from "@/assets/home-top.en.md";
+import htmlBottomEn from "@/assets/home-bottom.en.md";
 import htmlBottom from "@/assets/home-bottom.md";
 import htmlBottomHant from "@/assets/home-bottom.zh_hant.md";
-import htmlBottomEn from "@/assets/home-bottom.en.md";
-import { PersonMeta } from "@/logic/data";
-import { dataHost, getLang, replaceUrlVars } from "@/logic/config";
-import urljoin from "url-join";
-import { info } from '@/logic/utils';
-import { fetchWithLang, handleIconFromString } from "@/logic/helper";
-import { fitText } from "@/logic/dom_utils";
-import TdorComments from "@/views/TdorComments.vue";
+import htmlTopEn from "@/assets/home-top.en.md";
+import htmlTop from "@/assets/home-top.md";
+import htmlTopHant from "@/assets/home-top.zh_hant.md";
+import tdorCommentViewEn from "@/assets/tdor-comments-head-en.md";
+import tdorCommentViewHant from "@/assets/tdor-comments-head-zh_hant.md";
+import tdorCommentView from "@/assets/tdor-comments-head.md";
+import tdorTopEn from "@/assets/tdor-top.en.md";
+import tdorTop from "@/assets/tdor-top.md";
+import tdorTopHant from "@/assets/tdor-top.zh_hant.md";
+import BirthdayButton from '@/components/BirthdayButton.vue'
 import Loading from '@/components/Loading.vue';
 import RandomPerson from '@/components/RandomPerson.vue';
-import BirthdayButton from '@/components/BirthdayButton.vue'
+import {dataHost, getLang, peopleUrl, replaceUrlVars} from "@/logic/config";
+import {Person, PersonMeta} from "@/logic/data";
+import {fitText} from "@/logic/dom_utils";
+import {isEaster} from "@/logic/easterEgg";
+import {fetchWithLang, gaussian, getResponseSync, handleIconFromString, shuffle} from "@/logic/helper";
+import {info} from '@/logic/utils';
+import {viaBalloon} from "@/logic/viaFetch";
 import router from "@/router";
-import { handleElihusoSuicideNote } from '@/logic/easterEgg';
+import {handleElihusoSuicideNote} from '@/logic/easterEgg';
+import TdorComments from "@/views/TdorComments.vue";
+import urljoin from "url-join";
+import {Component, Ref, Vue} from 'vue-facing-decorator';
 
-@Component({components: {TdorComments, Loading, RandomPerson, BirthdayButton}})
-export default class Home extends Vue
-{
+@Component({ components: { TdorComments, Loading, RandomPerson, BirthdayButton } })
+export default class Home extends Vue {
     clicked = ''
     showAdd = false
     isLoading = true
@@ -82,6 +84,8 @@ export default class Home extends Vue
     htmlBottom = handleIconFromString(this.lang === 'zh_hans' ? htmlBottom : (this.lang === 'zh_hant' ? htmlBottomHant : htmlBottomEn));
 
     people: PersonMeta[] = null as never as PersonMeta[]
+
+    birthdayList = [] as [string, string][]
 
     @Ref() bookmarkTexts: HTMLDivElement[]
     @Ref() bookmark: HTMLDivElement[]
@@ -101,10 +105,8 @@ export default class Home extends Vue
         return false;
     }
 
-    updated()
-    {
-        if (this.bookmark != undefined)
-        {
+    updated() {
+        if (this.bookmark != undefined) {
             const width = this.bookmark[0].offsetWidth - 10
             for (const b of this.bookmarkTexts) fitText(b, { width })
         }
@@ -113,22 +115,34 @@ export default class Home extends Vue
         }
     }
 
-    created(): void
-    {
+    created(): void {
         info(`Language: ${this.lang}`)
         fetchWithLang(urljoin(dataHost, 'people-home-list.json'))
             .then(it => it.text())
-            .then(it => this.people = JSON.parse(it))
+            .then(it => this.people = (isEaster() && (gaussian() < 0.40)) ? shuffle(JSON.parse(it)) : JSON.parse(it))
+
+        fetch(urljoin(dataHost, 'birthday-list.json'))
+            .then(it => it.json())
+            .then(it => {
+                for (const v of it) {
+                    const d = new Date(v[1]);
+                    const now = new Date();
+                    if (d.getDate() == now.getDate() && d.getMonth() == now.getMonth()) {
+                        const p = JSON.parse(getResponseSync(urljoin(peopleUrl(v[0]), getLang() == 'zh_hans' ? 'info.json' : `info.${getLang()}.json`))) as Person;
+                        this.birthdayList.push([v[0], p.name])
+                    }
+                }
+                console.log(this.birthdayList)
+                if (this.birthdayList.length) viaBalloon()
+            });
     }
 
-    switchPage(p: PersonMeta): void
-    {
+    switchPage(p: PersonMeta): void {
         info(`switchPage(${p.id})`)
         router.push(`/profile/${p.id}`)
     }
 
-    profileUrl(p: PersonMeta): string
-    {
+    profileUrl(p: PersonMeta): string {
         return replaceUrlVars(p.profileUrl, p.id)
     }
 }
@@ -142,8 +156,18 @@ export default class Home extends Vue
     text-justify: inter-word
     margin: 10px min(5vw, 40px)
 
+.randomButtons
+    display: flex
+    flex-direction: row
+    flex-wrap: wrap
+    justify-content: center
+    justify-items: center
+    width: 90%
+    gap: 20px
+    margin: auto
+
 .randomP
-    margin: auto 10px
+    margin: 10px 0px
     display: inline-flex
 
 #profiles
@@ -226,4 +250,13 @@ export default class Home extends Vue
             $len: 30vw
             height: $len
             width: $len
+
+[data-theme="dark"]
+    .back, .front
+        border: 10px solid rgba(27, 27, 32, 0.8964) !important
+        outline: 2px solid $color-text-dark-main !important
+
+    .bookmark
+        border: 40px solid rgba(255, 189, 202, 0.25) !important
+        border-bottom: 10px solid transparent !important
 </style>

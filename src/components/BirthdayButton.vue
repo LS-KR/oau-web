@@ -1,50 +1,22 @@
 <template>
-    <button class="random clickable hy-button" v-on:click="goBirth" v-if="shown">
-        <Icon class="iconR" icon="tabler:candy" />
+    <button class="random clickable hy-button" v-on:click="goBirth">
+        <Icon class="iconR" icon="tabler:candy"/>
         <span class="textR">{{ t.birthday.birthday.replace('{0}', name) }}</span>
     </button>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
-import { dataHost, t, peopleUrl, getLang } from '@/logic/config';
-import { Person } from '@/logic/data';
-import urljoin from 'url-join';
-import { getResponseSync } from '@/logic/helper';
-import { Icon } from '@iconify/vue';
+import {t} from '@/logic/config';
 import router from '@/router';
+import {Icon} from '@iconify/vue';
+import {Component, Prop, Vue} from 'vue-facing-decorator';
 
 @Component({ components: { Icon } })
 export default class BirthdayButton extends Vue {
     t = t;
     birth: [string, string][] = null as never as [string, string][];
-    shown = false;
-    id = '';
-    name = '';
-
-    created(): void {
-        fetch(urljoin(dataHost, 'birthday-list.json'))
-            .then(it => it.json())
-            .then(it => {
-                this.birth = it;
-                const ids = [] as string[];
-                const names = [] as string[];
-                for (const v of it) {
-                    const d = new Date(v[1]);
-                    const now = new Date();
-                    if (d.getDate() == now.getDate() && d.getMonth() == now.getMonth()) {
-                        this.shown = true;
-                        ids.push(v[0]);
-                        const p = JSON.parse(getResponseSync(urljoin(peopleUrl(v[0]), getLang() == 'zh_hans' ? 'info.json' : `info.${getLang()}.json`))) as Person;
-                        names.push(p.name);
-                    }
-                }
-                if (this.shown) {
-                    this.id = ids[(Math.random() * ids.length) | 0];
-                    this.name = names[(Math.random() * names.length) | 0];
-                }
-            });
-    }
+    @Prop({ required: true }) id: string;
+    @Prop({ required: true }) name: string;
 
     goBirth() {
         router.push(`/profile/${this.id}`);
@@ -72,4 +44,9 @@ export default class BirthdayButton extends Vue {
 
     font-size: 1rem
     font-family: 'Hua', $font
+
+[data-theme="dark"]
+    .random
+        color: $color-text-dark-main
+        background-color: $color-bg-dark-6
 </style>

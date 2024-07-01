@@ -6,21 +6,19 @@ export const dataHost = 'https://data.one-among.us'
 // export const dataHost = 'http://localhost:8080'
 export const captchaSiteKey = '6LcbpzQdAAAAAN-J3dWZsi1t_ZRNT-ybUbmsQmH_'
 
-export function peopleUrl(id: string): string
-{
+export function peopleUrl(id: string): string {
     return urljoin(dataHost, 'people', id)
 }
-export function backupUrl(id: string, platform: string): string
-{
+
+export function backupUrl(id: string, platform: string): string {
     return urljoin(peopleUrl(id), 'backup', platform, 'posts.json')
 }
 
-export function replaceUrlVars(str: string, id: string): string
-{
+export function replaceUrlVars(str: string, id: string): string {
     return str.replace(/\${dataHost}/g, dataHost).replace(/\${path}/g, peopleUrl(id))
 }
 
-const zhMap = {'zh-tw': 'zh_hant', 'zh-hk': 'zh_hant', 'zh-sg': 'zh_hans', 'zh-cn': 'zh_hans', 'en':'en'}
+const zhMap = { 'zh-tw': 'zh_hant', 'zh-hk': 'zh_hant', 'zh-sg': 'zh_hans', 'zh-cn': 'zh_hans', 'en': 'en' }
 export type Lang = 'zh_hans' | 'zh_hant' | 'en'
 export const supportedLang: Record<Lang, string> = {
     'zh_hans': '简',
@@ -33,28 +31,25 @@ export const supportedLang: Record<Lang, string> = {
  *
  * @return 'zh_hans', 'zh_hant' or 'en'
  */
-export function getLang(): Lang
-{
+export function getLang(): Lang {
     if (typeof localStorage === 'undefined') return 'en'
 
     // Language preference set, return
     const pref = localStorage.getItem("lang")
-    if (pref && (pref == 'zh_hans' || pref == 'zh_hant' || pref =='en')) return pref
+    if (pref && (pref == 'zh_hans' || pref == 'zh_hant' || pref == 'en')) return pref
 
     // No language preference, infer from user agent
     const langs = navigator.languages.map(it => it.toLowerCase())
 
     // If user agent contains any langauges starting with en[-]
     const en = langs.filter(it => it.startsWith("en"))
-    if (en.length > 0) 
-    {
+    if (en.length > 0) {
         localStorage.setItem('lang', 'en')
         return 'en'
     }
     // If user agent contains any langauges starting with zh-
     const zh = langs.filter(it => it.startsWith("zh-"))
-    if (zh.length > 0 && zhMap[zh[0]]) 
-    {
+    if (zh.length > 0 && zhMap[zh[0]]) {
         localStorage.setItem('lang', zhMap[zh[0]])
         return zhMap[zh[0]]
     }
@@ -63,13 +58,13 @@ export function getLang(): Lang
     return 'zh_hans'
 }
 
-export function setLang(name: Lang)
-{
+export function setLang(name: Lang) {
     if (name in zhMap) name = zhMap[name]
     localStorage.setItem('lang', name)
 }
 
 export const limit = { warningLimit: 10, errorLimit: 20, cooldown: 30 }
+export const balloons = { count: 40, min: -1100, max: -100, width: 900 }
 
 export const i18n = {
     "en": {
@@ -128,6 +123,15 @@ export const i18n = {
         birthday: {
             birthday: "Today is {0}'s birthday!",
             happy: "Happy Birthday!"
+        },
+        switch_warning: {
+            title: "Trigger Warning",
+            text: "The entry to be switched has a strong trauma triggering factor. Please prioritize your mental state."
+        },
+        backup: {
+            error: "Error in load page",
+            back: "back",
+            view: "View backup of {0}"
         }
     },
     "zh_hans": {
@@ -186,6 +190,15 @@ export const i18n = {
         birthday: {
             birthday: "今天是{0}的生日",
             happy: "生日快乐"
+        },
+        switch_warning: {
+            title: "创伤触发要素警告",
+            text: "将要切换的条目有极强的创伤触发要素. 请优先保证自己精神状态. "
+        },
+        backup: {
+            error: "加载页面错误... 请重试",
+            back: "返回",
+            view: "查看{0}备份"
         }
     },
     "zh_hant": {
@@ -244,6 +257,15 @@ export const i18n = {
         birthday: {
             birthday: "今日是{0}的誕生日",
             happy: "誕生日快樂!"
+        },
+        switch_warning: {
+            title: "創傷觸發要素警告",
+            text: "將要切換的條目具有極強的創傷觸發性. 請優先保證自己的精神狀態"
+        },
+        backup: {
+            error: "加載頁面時出錯... 請重新嘗試",
+            back: "返回",
+            view: "視察{0}備份"
         }
     }
 }

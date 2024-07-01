@@ -1,34 +1,38 @@
 <template>
     <a class="backup button anim" :href="computedUrl">
         <i class="icon" :class="icon ? icon : `fab fa-${platform}`"></i>
-        <span class="text">{{computedText}}</span>
+        <span class="text">{{ computedText }}</span>
     </a>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import {getLang, t} from '@/logic/config';
 import urljoin from "url-join";
+import {Component, Prop, Vue} from 'vue-facing-decorator';
 
-const kvs = {'telegram': '电报', 'twitter': '推特'}
+const kvs = {
+    zh_hans: { 'telegram': '电报', 'twitter': '推特' },
+    zh_hant: { 'telegram': '電報', 'twitter': '推特' },
+    en: { 'telegram': 'telegram', 'twitter': 'twitter' }
+}
 
-@Component({components: {}})
-export default class ChannelBackupButton extends Vue
-{
-    @Prop({default: "telegram"}) platform: string
+@Component({ components: {} })
+export default class ChannelBackupButton extends Vue {
+    @Prop({ default: "telegram" }) platform: string
     @Prop() icon: string
     @Prop() url: string
     @Prop() text: string
 
-    get computedUrl()
-    {
+    kvs = kvs[getLang()]
+
+    get computedUrl() {
         if (this.url) return this.url
         return urljoin(window.location.href, `backup/${this.platform}`)
     }
 
-    get computedText()
-    {
+    get computedText() {
         if (this.text) return this.text
-        return '查看' + (kvs[this.platform] ?? ` ${this.platform} `) + '备份'
+        return t.backup.view.replace('{0}', this.kvs[this.platform] ?? ` ${this.platform} `)
     }
 }
 </script>
@@ -57,8 +61,17 @@ export default class ChannelBackupButton extends Vue
         background-color: rgb(188 140 68 / 50%)
         -webkit-background-clip: text
         background-clip: text
-        text-shadow: rgba(255,255,255,0.5) 0 5px 6px
+        text-shadow: rgba(255, 255, 255, 0.5) 0 5px 6px
 
 .button.anim:hover
     box-shadow: 0 10px 10px -5px rgba(166, 134, 89, 0.3)
+
+[data-theme="dark"]
+    .backup
+        background: $color-bg-dark-6
+        color: $color-text-dark-main
+
+        .icon
+            background-color: rgb(89 64 20)
+            text-shadow: rgba(255, 255, 255, 0.125) 0 5px 6px
 </style>

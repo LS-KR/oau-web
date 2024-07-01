@@ -6,13 +6,13 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
-import { dataHost, t } from '@/logic/config';
-import { PersonMeta } from '@/logic/data';
-import urljoin from 'url-join';
-import { fetchWithLang } from '@/logic/helper';
-import { Icon } from "@iconify/vue";
+import {dataHost, t} from '@/logic/config';
+import {PersonMeta} from '@/logic/data';
+import {fetchWithLang} from '@/logic/helper';
 import router from "@/router";
+import {Icon} from "@iconify/vue";
+import urljoin from 'url-join';
+import {Component, Vue} from 'vue-facing-decorator';
 
 @Component({ components: { Icon } })
 export default class RandomPerson extends Vue {
@@ -54,4 +54,8 @@ export default class RandomPerson extends Vue {
     font-size: 1rem
     font-family: 'Hua', $font
 
+[data-theme="dark"]
+    .random
+        color: $color-text-dark-main
+        background-color: $color-bg-dark-6
 </style>

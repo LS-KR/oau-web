@@ -20,27 +20,25 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
 import Divider from "@/components/divider.vue";
 import LangButton from "@/components/LangButton.vue";
-import { info, logPrefixCss } from "@/logic/utils";
-import { transColors } from "@/logic/constants";
-import { t, getLang } from './logic/config';
+import {transColors} from "@/logic/constants";
+import {applyTheme} from "@/logic/theme";
+import {info, logPrefixCss} from "@/logic/utils";
+import {Component, Vue} from 'vue-facing-decorator';
+import {getLang, t} from './logic/config';
 
-@Component({components: {LangButton, Divider}})
-export default class App extends Vue
-{
+@Component({ components: { LangButton, Divider } })
+export default class App extends Vue {
     $route: any
     t = t
 
-    created(): void
-    {
+    created(): void {
         if (!localStorage.getItem('showBtn'))
             localStorage.setItem('showBtn', '1')
     }
 
-    mounted()
-    {
+    mounted() {
         info(`One Among Us - Web Frontend loaded`)
         console.log(`%c %c %c %c %c `,
             ...transColors.map(c => `background: ${c}; padding: 40px 20px;`)
@@ -52,6 +50,7 @@ export default class App extends Vue
         )
 
         document.getElementById("app").dataset.lang = getLang()
+        applyTheme()
     }
 }
 </script>
@@ -64,6 +63,9 @@ export default class App extends Vue
 @import "css/fonts/BackIcon.css"
 @import "css/colors"
 @import "css/markdown"
+
+*
+    transition: all 0.25s cubic-bezier(0.35, 0, 0.72, 0.22)
 
 #app
     font-family: $font
@@ -83,6 +85,13 @@ export default class App extends Vue
 
     &[data-lang="en"]
         font-family: $font-en
+
+[data-theme="dark"]
+    body
+        background: #181825
+
+    #app
+        color: $color-text-dark-main
 </style>
 
 <!-- Scoped Style -->
@@ -104,6 +113,7 @@ export default class App extends Vue
 #nav
     background-color: $color-bg-6
     min-height: 40px
+
     a
         text-decoration: none
         margin: 15px
@@ -122,4 +132,23 @@ export default class App extends Vue
 .router-link
     position: relative
     z-index: 100
+
+[data-theme="dark"]
+    #title
+        background-color: $color-bg-dark-5
+
+        #title-sub
+            color: $color-text-dark-light
+
+    #nav
+        background-color: $color-bg-dark-6
+
+        a
+            color: $color-text-dark-main
+
+            &.router-link-exact-active
+                color: $color-text-dark-special
+
+    #router
+        background-color: $color-bg-dark-4
 </style>

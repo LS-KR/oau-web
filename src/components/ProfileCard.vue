@@ -3,28 +3,28 @@
         <!-- Horizontal Alignment of profile pic and the rest -->
         <div id="left" class="fbox-v">
             <img :src="profileUrl" draggable="false" alt="profile">
-            <div class="spacer" />
+            <div class="spacer"/>
             <div id="buttons" v-if="!screenshotMode">
                 <div class="button-container">
                     <el-tooltip content="献花" :show-after="1000" :disabled="flowersGiven || loading.has('flower')">
                         <div class="button anim fbox-vcenter" @click="flower"
-                            :class="(flowersGiven || loading.has('flower')) ? 'disabled' : ''">
-                            <IEpCheck v-if="flowersGiven" />
-                            <Icon class="iconR" icon="line-md:cake" v-else-if="isBirthday && !loading.has('flower')" />
-                            <IEpLollipop v-else-if="!loading.has('flower')" />
-                            <IEpLoading v-else />
+                             :class="(flowersGiven || loading.has('flower')) ? 'disabled' : ''">
+                            <IEpCheck v-if="flowersGiven"/>
+                            <Icon class="iconR" icon="line-md:cake" v-else-if="isBirthday && !loading.has('flower')"/>
+                            <IEpLollipop v-else-if="!loading.has('flower')"/>
+                            <IEpLoading v-else/>
                         </div>
                     </el-tooltip>
                     <div class="text-under-button">{{ flowerText }}</div>
                 </div>
                 <div class="button-container edit">
                     <div class="button anim fbox-vcenter" @click="edit">
-                        <IEpEdit />
+                        <IEpEdit/>
                     </div>
                     <div class="text-under-button">Edit</div>
                 </div>
             </div>
-            <div class="spacer-bottom f-grow1" />
+            <div class="spacer-bottom f-grow1"/>
         </div>
         <!-- Vertical Alignment of info section -->
         <div id="right">
@@ -32,7 +32,7 @@
                 <span id="name-text">{{ p.name }}</span>
                 <span id="id">@{{ p.id }}</span>
             </div>
-            <div id="hr" />
+            <div id="hr"/>
             <ul id="fields" class="f-grow1">
                 <li v-for="info of p.info" :key="info[0]">
                     <span class="key">{{ info[0] }}：</span>
@@ -41,31 +41,33 @@
             </ul>
             <div id="websites" v-if="p.websites?.length">
                 <span id="websites-text">{{ t.nav_website }}</span>
-                <a v-for="web of p.websites" :key="web[0]" :href="web[1]">
-                    <DynamicIcon :icon="web[0]" />
-                </a>
+                <span id="websites-container">
+                    <a v-for="web of p.websites" :key="web[0]" :href="web[1]">
+                        <DynamicIcon :icon="web[0]"/>
+                    </a>
+                </span>
             </div>
         </div>
 
-        <a class="switchButton" v-if="canSwitch" v-bind:href="target" draggable="false">
-            <SwitchButton />
+        <a class="switchButton" v-if="canSwitch" v-bind:href="target" v-on:click="switchWarn()" draggable="false">
+            <SwitchButton/>
         </a>
 
-        <img class="watermark" draggable="false" src="/favicon-large.png" alt="" />
+        <img class="watermark" draggable="false" src="/favicon-large.png" alt=""/>
     </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { backendHost, dataHost, replaceUrlVars, t } from "@/logic/config";
-import { abbreviateNumber, getTodayDate } from "@/logic/helper";
-import { Person } from "@/logic/data";
-import { info } from '@/logic/utils';
-import { Icon } from '@iconify/vue';
-import Swal from 'sweetalert2';
+import {backendHost, dataHost, replaceUrlVars, t} from "@/logic/config";
+import {Person} from "@/logic/data";
+import {handleBirthdayToast, handleFlowerToast} from '@/logic/easterEgg';
+import {abbreviateNumber, getResponseSync, getTodayDate} from "@/logic/helper";
+import {info} from '@/logic/utils';
 import router from "@/router";
-import { handleFlowerToast, handleBirthdayToast } from '@/logic/easterEgg';
+import {Icon} from '@iconify/vue';
+import Swal from 'sweetalert2';
 import urljoin from 'url-join';
+import {Component, Prop, Vue} from 'vue-facing-decorator';
 
 @Component({ components: { Icon } })
 export default class ProfileCard extends Vue {
@@ -78,6 +80,8 @@ export default class ProfileCard extends Vue {
     isBirthday = false
     canSwitch = false
     target = '.'
+    sourceTarget = '.'
+    inWarning = false
 
     loading = new Set<string>()
 
@@ -117,6 +121,13 @@ export default class ProfileCard extends Vue {
                     if (v[0] == this.userid) {
                         this.canSwitch = true
                         this.target = `/profile/${v[1]}`
+                        this.sourceTarget = this.target
+                        const r = getResponseSync(urljoin(dataHost, 'trigger-list.json'));
+                        const l = JSON.parse(r) as string[];
+                        if (l.includes(v[1])) {
+                            this.target = null;
+                            this.inWarning = true;
+                        }
                     }
                 }
             })
@@ -146,6 +157,36 @@ export default class ProfileCard extends Vue {
         return abbreviateNumber(this.flowers)
     }
 
+    switchWarn() {
+        if (!this.inWarning) return;
+        Swal.fire({
+            title: this.t.switch_warning.title,
+            text: this.t.switch_warning.text,
+            icon: 'warning',
+            showCancelButton: false,
+            showCloseButton: false,
+            showConfirmButton: true,
+            allowOutsideClick() {
+                return false
+            },
+            timer: 300000,
+            timerProgressBar: true,
+            iconColor: '#d20f39',
+            allowEscapeKey() {
+                return false;
+            },
+            allowEnterKey() {
+                return false;
+            },
+            customClass: 'view-limit-alert'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.target = this.sourceTarget;
+                this.inWarning = false;
+            }
+        })
+    }
+
     edit(): void {
         Swal.fire({
             title: t.nav_what_to_edit,
@@ -171,6 +212,9 @@ export default class ProfileCard extends Vue {
 <style lang="sass" scoped>
 @import "../css/colors"
 @import "@/css/global"
+
+div:has(.view-limit-alert)
+    backdrop-filter: blur(10px)
 
 // Screenshot mode
 .screenshot #info
@@ -215,6 +259,7 @@ export default class ProfileCard extends Vue {
 
     // Watermark
     position: relative
+
     img.watermark
         position: absolute
         z-index: 1
@@ -276,11 +321,21 @@ export default class ProfileCard extends Vue {
 
         #websites-text
             font-weight: bold
-        a
-            color: $color-text-main
-            text-decoration: none
-            display: inline-flex
-            align-items: center
+            min-width: 40px
+
+        #websites-container
+            display: flex
+            gap: 10px
+            flex-direction: row
+            align-items: flex-start
+            align-content: flex-start
+            flex-wrap: wrap
+
+            a
+                color: $color-text-main
+                text-decoration: none
+                display: inline-flex
+                align-items: center
 
 #left
     margin-left: min(5vw, 60px)
@@ -329,22 +384,30 @@ export default class ProfileCard extends Vue {
 
 // Phone layout: left becomes top and right becomes bottom
 @media screen and (max-width: 570px)
-
     #info
         flex-direction: column
 
         // Leave space for the profile pic
         #name-box, #fields > li:first-child
-           max-width: calc(100% - 100px)
+            max-width: calc(100% - 100px)
+            overflow: hidden
+            text-justify: inter-word
 
         // Hide li dots
         #fields li
             list-style-type: none
             margin-left: 0
+            overflow: hidden
+            text-justify: inter-word
 
             // Wrap text
             .value
-                word-break: break-all
+                //word-break: break-all
+                text-justify: inter-word
+
+        #fields
+            max-width: calc(100% - 15px)
+            text-indent: 3.25em hanging
 
     #left
         flex-direction: row
@@ -367,9 +430,21 @@ export default class ProfileCard extends Vue {
         .spacer
             display: none
 
+
     #right
         margin-left: 32px
         margin-right: 32px
+
+        #websites
+            max-width: calc(100% - 100px)
+
+            #websites-container
+                max-width: calc(100% - 1em)
+
+    .switchButton
+        position: absolute
+        left: 5px
+        top: 32px
 
 // Even smaller screen
 @media screen and (max-width: 400px)
@@ -390,7 +465,9 @@ export default class ProfileCard extends Vue {
 
         // Leave space for the profile pic
         #name-box, #fields > li:first-child
-            max-width: calc(100% - 60px)
+            max-width: calc(90% - 50px)
+            overflow: hidden
+            text-justify: inter-word
 
     #left
         img
@@ -415,4 +492,22 @@ export default class ProfileCard extends Vue {
                 width: 30px
                 height: 30px
 
+[data-theme="dark"]
+    #info
+        background-color: $color-bg-dark-6
+
+    #right
+        #hr
+            color: $color-text-dark-main
+
+        #websites
+            #websites-container
+                a
+                    color: $color-text-dark-main
+
+    #left
+        #buttons
+            .button
+                background: $color-bg-dark-5
+                border: 2px solid $color-text-dark-main
 </style>
