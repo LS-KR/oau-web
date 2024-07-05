@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            <div class="introduction markdown-content" v-html="htmlBottom"/>
+            <div class="introduction markdown-content bottom" v-html="htmlBottom"/>
         </div>
     </div>
 </template>
@@ -55,7 +55,7 @@ import tdorCommentView from "@/assets/tdor-comments-head.md";
 import tdorTopEn from "@/assets/tdor-top.en.md";
 import tdorTop from "@/assets/tdor-top.md";
 import tdorTopHant from "@/assets/tdor-top.zh_hant.md";
-import BirthdayButton from '@/components/BirthdayButton.vue'
+import BirthdayButton from '@/components/buttons/BirthdayButton.vue'
 import Loading from '@/components/Loading.vue';
 import RandomPerson from '@/components/RandomPerson.vue';
 import {dataHost, getLang, peopleUrl, replaceUrlVars} from "@/logic/config";
@@ -119,7 +119,7 @@ export default class Home extends Vue {
         info(`Language: ${this.lang}`)
         fetchWithLang(urljoin(dataHost, 'people-home-list.json'))
             .then(it => it.text())
-            .then(it => this.people = (isEaster() && (gaussian() < 0.40)) ? shuffle(JSON.parse(it)) : JSON.parse(it))
+            .then(it => this.people = (isEaster() && (gaussian() < 0.35)) ? shuffle(JSON.parse(it)) : JSON.parse(it))
 
         fetch(urljoin(dataHost, 'birthday-list.json'))
             .then(it => it.json())
@@ -155,6 +155,9 @@ export default class Home extends Vue {
     text-align: justify
     text-justify: inter-word
     margin: 10px min(5vw, 40px)
+
+.bottom
+    padding-bottom: 250px
 
 .randomButtons
     display: flex
