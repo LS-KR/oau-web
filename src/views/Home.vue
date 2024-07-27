@@ -18,8 +18,8 @@
             </div>
             <Loading v-if="isLoading"/>
 
-            <div id="profiles" class="unselectable" v-if="people">
-                <div class="profile" v-for="(p, i) in people" :key="i">
+            <transition-group id="profiles" class="unselectable" v-if="people" name="profiles" tag="div">
+                <div class="profile" v-for="p in people" :key="p.id">
                     <div class="back"/>
                     <a :href="`/profile/${p.id}`" @click.exact.prevent.stop="() => false">
                         <transition name="fade" @after-leave="() => switchPage(p)">
@@ -35,7 +35,7 @@
                 <div class="profile" v-if="showAdd">
                     <div class="back add fbox-vcenter">+</div>
                 </div>
-            </div>
+            </transition-group>
 
             <div class="introduction markdown-content bottom" v-html="htmlBottom"/>
         </div>
@@ -62,8 +62,16 @@ import {dataHost, getLang, peopleUrl, replaceUrlVars} from "@/logic/config";
 import {Person, PersonMeta} from "@/logic/data";
 import {fitText} from "@/logic/dom_utils";
 import {isEaster} from "@/logic/easterEgg";
-import {fetchWithLang, gaussian, getResponseSync, handleIconFromString, shuffle} from "@/logic/helper";
+import {
+    fetchWithLang,
+    gaussian, gaussian_shuffle,
+    getResponseSync,
+    handleIconFromString,
+    scheduledLoopTask,
+    shuffle,
+} from "@/logic/helper";
 import {info} from '@/logic/utils';
+import {isUwU, UwU} from "@/logic/uwu";
 import {viaBalloon} from "@/logic/viaFetch";
 import router from "@/router";
 import {handleElihusoSuicideNote} from '@/logic/easterEgg';
@@ -119,7 +127,14 @@ export default class Home extends Vue {
         info(`Language: ${this.lang}`)
         fetchWithLang(urljoin(dataHost, 'people-home-list.json'))
             .then(it => it.text())
-            .then(it => this.people = (isEaster() && (gaussian() < 0.35)) ? shuffle(JSON.parse(it)) : JSON.parse(it))
+            .then(it => {
+                this.people = (isEaster() && (gaussian() < 0.35)) ? shuffle(JSON.parse(it)) : JSON.parse(it)
+                const now = new Date();
+                const pros = ((now.getDate() == 1) && (now.getMonth() + 1 == 4)) ? 0.5 : 0.05;
+                if (isEaster() && (gaussian() < pros)) scheduledLoopTask(1500, () => {
+                    this.people = gaussian_shuffle(this.people)
+                })
+            })
 
         fetch(urljoin(dataHost, 'birthday-list.json'))
             .then(it => it.json())
@@ -137,6 +152,12 @@ export default class Home extends Vue {
             });
     }
 
+    mounted() {
+        if (isUwU()) {
+            UwU()
+        }
+    }
+
     switchPage(p: PersonMeta): void {
         info(`switchPage(${p.id})`)
         router.push(`/profile/${p.id}`)
@@ -150,6 +171,7 @@ export default class Home extends Vue {
 
 <style lang="sass" scoped>
 @import "../css/colors"
+@import "../css/motion"
 
 .introduction
     text-align: justify
@@ -245,6 +267,9 @@ export default class Home extends Vue {
         position: absolute
         bottom: -15px
         z-index: 2
+
+.profiles-move
+    transition: all 0.5s $ease-in-out-cric
 
 @media screen and (max-width: 440px)
     .profile
