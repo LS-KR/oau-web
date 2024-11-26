@@ -83,6 +83,7 @@ import {
     scheduledLoopTask,
     shuffle,
 } from "@/logic/helper";
+import {randomAvatarDataURI} from "@/logic/randomAvatar";
 import {info} from '@/logic/utils';
 import {isUwU, UwU} from "@/logic/uwu";
 import {viaBalloon} from "@/logic/viaFetch";
@@ -219,6 +220,12 @@ export default class Home extends Vue {
     }
 
     profileUrl(p: PersonMeta): string {
+        if (p.profileUrl.includes("\$\{random\}")) return randomAvatarDataURI({
+            name: p.id,
+            colors: ["#addfd3", "#eae3d0", "#dbc4b6", "#ffa5aa", "#efd5c4"],
+            square: true,
+            size: 150,
+        })
         return replaceUrlVars(p.profileUrl, p.id)
     }
 }
